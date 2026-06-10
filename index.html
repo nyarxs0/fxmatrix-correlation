@@ -1,0 +1,1671 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FXMatrix — Currency Correlation Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Clash+Display:wght@400;500;600;700&family=Cabinet+Grotesk:wght@400;500;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════════════
+   RESET & ROOT
+══════════════════════════════════════════════ */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --w:#FFFFFF;
+  --off:#F8FAFF;
+  --sky:#EEF5FF;
+  --pale:#E8F3FF;
+  --b1:#1A56E8;
+  --b2:#1346CC;
+  --b3:#0F3AAA;
+  --t1:#0891B2;
+  --t2:#0E7490;
+  --g1:#059669;
+  --g2:#047857;
+  --mint:#D1FAE5;
+  --aqua:#CFFAFE;
+  --n:#0A0F1E;
+  --slate:#1E293B;
+  --mid:#475569;
+  --mute:#94A3B8;
+  --lgr:#CBD5E1;
+  --xlgr:#F1F5F9;
+  --r1:#EF4444;
+  --r2:#DC2626;
+  --rose:#FEE2E2;
+  --o1:#F97316;
+  --amber:#FEF3C7;
+  --gold:#D97706;
+  --purp:#6366F1;
+  --font-display:'Cabinet Grotesk',sans-serif;
+  --font-body:'Cabinet Grotesk',sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+  --shadow-sm:0 2px 8px rgba(30,100,200,.08);
+  --shadow:0 8px 32px rgba(30,100,200,.12);
+  --shadow-lg:0 24px 64px rgba(30,100,200,.18);
+  --r:14px;
+  --r-lg:22px;
+}
+html{scroll-behavior:smooth;font-size:16px}
+body{font-family:var(--font-body);background:var(--w);color:var(--slate);overflow-x:hidden;line-height:1.6}
+img{max-width:100%}
+a{text-decoration:none;color:inherit}
+button{cursor:pointer;border:none;font-family:inherit}
+::selection{background:var(--b1);color:#fff}
+
+/* ══════════════════════════════════════════════
+   SCROLLBAR
+══════════════════════════════════════════════ */
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:#f1f5f9}
+::-webkit-scrollbar-thumb{background:linear-gradient(var(--b1),var(--t1));border-radius:99px}
+
+/* ══════════════════════════════════════════════
+   NAV
+══════════════════════════════════════════════ */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:1000;
+  padding:0 40px;height:64px;
+  display:flex;align-items:center;justify-content:space-between;
+  background:rgba(255,255,255,.85);
+  backdrop-filter:blur(20px) saturate(180%);
+  border-bottom:1px solid rgba(26,86,232,.08);
+  transition:all .3s;
+}
+nav.scrolled{box-shadow:0 4px 24px rgba(30,100,200,.1)}
+.nav-logo{
+  font-family:var(--font-display);font-weight:800;font-size:1.3rem;
+  color:var(--n);display:flex;align-items:center;gap:10px;
+}
+.nav-logo-icon{
+  width:34px;height:34px;border-radius:9px;
+  background:linear-gradient(135deg,var(--b1),var(--t1));
+  display:flex;align-items:center;justify-content:center;
+  font-size:.8rem;font-weight:700;color:#fff;letter-spacing:-.5px;
+}
+.nav-links{display:flex;align-items:center;gap:8px}
+.nav-links a{
+  padding:7px 16px;border-radius:8px;font-size:.875rem;font-weight:500;
+  color:var(--mid);transition:all .2s;
+}
+.nav-links a:hover{background:var(--sky);color:var(--b1)}
+.nav-cta{
+  padding:9px 22px;border-radius:10px;font-size:.875rem;font-weight:700;
+  background:linear-gradient(135deg,var(--b1),var(--t1));
+  color:#fff;transition:all .25s;
+  box-shadow:0 4px 14px rgba(26,86,232,.3);
+}
+.nav-cta:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(26,86,232,.4)}
+
+/* ══════════════════════════════════════════════
+   TICKER BAR
+══════════════════════════════════════════════ */
+.ticker-wrap{
+  position:fixed;top:64px;left:0;right:0;z-index:999;
+  background:linear-gradient(90deg,var(--b3),var(--b1),var(--t1),var(--g1),var(--t1),var(--b1),var(--b3));
+  background-size:200%;
+  animation:gradShift 8s linear infinite;
+  overflow:hidden;height:36px;display:flex;align-items:center;
+}
+@keyframes gradShift{0%{background-position:0%}100%{background-position:200%}}
+.ticker-inner{
+  display:flex;align-items:center;gap:0;
+  animation:ticker 35s linear infinite;
+  white-space:nowrap;
+}
+.ticker-inner:hover{animation-play-state:paused}
+@keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.tick-item{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:0 24px;font-family:var(--font-mono);font-size:.72rem;
+  color:rgba(255,255,255,.95);font-weight:500;
+  border-right:1px solid rgba(255,255,255,.2);
+}
+.tick-pair{font-weight:700;letter-spacing:.03em}
+.tick-val{opacity:.8}
+.tick-arrow{font-size:.8rem}
+.tick-arrow.up{color:#6EE7B7}
+.tick-arrow.dn{color:#FCA5A5}
+
+/* ══════════════════════════════════════════════
+   HERO
+══════════════════════════════════════════════ */
+.hero{
+  min-height:100vh;padding:160px 80px 100px;
+  display:flex;align-items:center;
+  position:relative;overflow:hidden;
+  background:var(--w);
+}
+/* Animated gradient mesh background */
+.hero-bg{
+  position:absolute;inset:0;z-index:0;
+  background:
+    radial-gradient(ellipse 80% 60% at 70% 20%,rgba(26,86,232,.06) 0%,transparent 60%),
+    radial-gradient(ellipse 60% 80% at 20% 80%,rgba(8,145,178,.05) 0%,transparent 60%),
+    radial-gradient(ellipse 40% 40% at 85% 85%,rgba(5,150,105,.04) 0%,transparent 50%),
+    linear-gradient(160deg,#FAFCFF 0%,#F0F7FF 40%,#EBF5FF 70%,#F5FFFE 100%);
+}
+/* Grid overlay */
+.hero-grid{
+  position:absolute;inset:0;z-index:0;
+  background-image:
+    linear-gradient(rgba(26,86,232,.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(26,86,232,.04) 1px,transparent 1px);
+  background-size:44px 44px;
+}
+/* Floating orbs */
+.orb{
+  position:absolute;border-radius:50%;filter:blur(60px);
+  pointer-events:none;animation:orbFloat 12s ease-in-out infinite;
+}
+.orb1{width:500px;height:500px;background:rgba(26,86,232,.07);top:-100px;right:-80px;animation-delay:-3s}
+.orb2{width:400px;height:400px;background:rgba(8,145,178,.06);bottom:-80px;left:-60px;animation-delay:-6s}
+.orb3{width:300px;height:300px;background:rgba(5,150,105,.05);top:50%;right:30%;animation-delay:-9s}
+@keyframes orbFloat{
+  0%,100%{transform:translate(0,0) scale(1)}
+  33%{transform:translate(30px,-30px) scale(1.05)}
+  66%{transform:translate(-20px,20px) scale(.97)}
+}
+
+.hero-content{position:relative;z-index:1;max-width:700px}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:linear-gradient(135deg,rgba(26,86,232,.1),rgba(8,145,178,.08));
+  border:1px solid rgba(26,86,232,.2);
+  border-radius:99px;padding:7px 18px;margin-bottom:28px;
+  font-size:.78rem;font-weight:700;letter-spacing:.1em;
+  color:var(--b1);text-transform:uppercase;
+}
+.badge-dot{
+  width:7px;height:7px;border-radius:50%;background:var(--g1);
+  animation:dotPulse 2s infinite;
+}
+@keyframes dotPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+.hero-title{
+  font-family:var(--font-display);font-size:clamp(2.6rem,5vw,4rem);
+  font-weight:800;line-height:1.1;letter-spacing:-.03em;
+  color:var(--n);margin-bottom:12px;
+}
+.hero-title span{
+  background:linear-gradient(135deg,var(--b1),var(--t1),var(--g1));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.hero-sub{
+  font-size:1.1rem;color:var(--mid);line-height:1.7;
+  margin-bottom:40px;max-width:560px;
+}
+.hero-actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:56px}
+.btn-primary{
+  display:inline-flex;align-items:center;gap:9px;
+  padding:14px 30px;border-radius:12px;font-size:.95rem;font-weight:700;
+  background:linear-gradient(135deg,var(--b1),var(--t1));
+  color:#fff;transition:all .25s;
+  box-shadow:0 8px 30px rgba(26,86,232,.35);
+}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 14px 40px rgba(26,86,232,.45)}
+.btn-secondary{
+  display:inline-flex;align-items:center;gap:9px;
+  padding:14px 28px;border-radius:12px;font-size:.95rem;font-weight:600;
+  background:var(--w);border:1.5px solid var(--lgr);color:var(--slate);
+  transition:all .25s;
+}
+.btn-secondary:hover{border-color:var(--b1);color:var(--b1);background:var(--sky)}
+.hero-stats{display:flex;gap:32px;flex-wrap:wrap}
+.hstat{display:flex;flex-direction:column;gap:3px}
+.hstat-num{
+  font-family:var(--font-mono);font-size:1.6rem;font-weight:700;
+  color:var(--n);letter-spacing:-.03em;
+}
+.hstat-num span{
+  background:linear-gradient(135deg,var(--b1),var(--t1));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.hstat-label{font-size:.78rem;color:var(--mute);font-weight:500;text-transform:uppercase;letter-spacing:.1em}
+.hero-divider{width:1px;background:var(--lgr);height:40px;align-self:center}
+
+/* Hero right — mini matrix preview */
+.hero-visual{
+  position:absolute;right:80px;top:50%;transform:translateY(-50%);
+  z-index:1;display:flex;flex-direction:column;gap:12px;
+  animation:heroVisualIn .8s ease .4s both;
+}
+@keyframes heroVisualIn{from{opacity:0;transform:translateY(-50%) translateX(40px)}to{opacity:1;transform:translateY(-50%) translateX(0)}}
+.mini-matrix-card{
+  background:rgba(255,255,255,.9);
+  backdrop-filter:blur(24px);
+  border:1px solid rgba(26,86,232,.1);
+  border-radius:var(--r-lg);
+  padding:20px;
+  box-shadow:var(--shadow-lg);
+  width:380px;
+}
+.mini-matrix-title{
+  font-size:.78rem;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--mute);margin-bottom:14px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.mini-matrix-title span{
+  background:var(--sky);color:var(--b1);
+  padding:3px 10px;border-radius:99px;font-size:.7rem;
+}
+.mini-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.mc{
+  width:100%;aspect-ratio:1;border-radius:5px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-mono);font-size:.55rem;font-weight:700;
+  transition:transform .2s;cursor:default;
+}
+.mc:hover{transform:scale(1.2);z-index:10;position:relative}
+/* Floating stat cards */
+.float-card{
+  background:rgba(255,255,255,.95);
+  backdrop-filter:blur(20px);
+  border:1px solid rgba(26,86,232,.1);
+  border-radius:12px;padding:14px 18px;
+  box-shadow:var(--shadow);
+  display:flex;align-items:center;gap:12px;
+  font-size:.82rem;
+}
+.float-icon{
+  width:38px;height:38px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.1rem;flex-shrink:0;
+}
+.float-val{font-weight:800;font-family:var(--font-mono);font-size:1rem}
+.float-lbl{color:var(--mute);font-size:.72rem;font-weight:500}
+
+/* ══════════════════════════════════════════════
+   SECTION BASE
+══════════════════════════════════════════════ */
+section{padding:100px 80px}
+.section-tag{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:.72rem;font-weight:700;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--b1);margin-bottom:14px;
+}
+.section-tag::before{content:'';width:28px;height:2px;background:var(--b1);border-radius:2px}
+.section-title{
+  font-family:var(--font-display);font-size:clamp(1.8rem,3vw,2.6rem);
+  font-weight:800;letter-spacing:-.03em;color:var(--n);
+  line-height:1.2;margin-bottom:16px;
+}
+.section-title span{
+  background:linear-gradient(135deg,var(--b1),var(--t1));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.section-sub{font-size:1rem;color:var(--mid);line-height:1.7;max-width:580px;margin-bottom:50px}
+
+/* ══════════════════════════════════════════════
+   CORRELATION LEGEND
+══════════════════════════════════════════════ */
+.legend-section{
+  background:linear-gradient(160deg,#F0F7FF,#EBF5FF,#F0FDFA);
+  border-top:1px solid rgba(26,86,232,.08);
+  border-bottom:1px solid rgba(26,86,232,.08);
+}
+.legend-grid{
+  display:grid;grid-template-columns:repeat(5,1fr);gap:16px;
+}
+.leg-card{
+  padding:20px 18px;border-radius:var(--r);
+  display:flex;flex-direction:column;gap:6px;
+  transition:transform .25s,box-shadow .25s;
+  cursor:default;border:1.5px solid transparent;
+}
+.leg-card:hover{transform:translateY(-4px);box-shadow:var(--shadow)}
+.leg-range{
+  font-family:var(--font-mono);font-size:.85rem;font-weight:700;
+}
+.leg-label{font-size:.8rem;font-weight:600;color:var(--slate)}
+.leg-example{font-size:.72rem;color:var(--mute);margin-top:2px}
+.leg-bar{height:4px;border-radius:99px;margin-top:6px;width:100%}
+
+/* ══════════════════════════════════════════════
+   MATRIX SECTION
+══════════════════════════════════════════════ */
+.matrix-section{background:var(--w)}
+.matrix-container{overflow-x:auto;border-radius:var(--r-lg);box-shadow:var(--shadow-lg);border:1px solid rgba(26,86,232,.08)}
+.matrix-table{border-collapse:collapse;width:100%;min-width:900px}
+.mth{
+  padding:10px 6px;font-family:var(--font-mono);font-size:.65rem;font-weight:700;
+  text-align:center;color:var(--slate);background:var(--xlgr);
+  border-bottom:2px solid rgba(26,86,232,.1);white-space:nowrap;
+  position:sticky;top:0;z-index:10;
+}
+.mth:first-child{position:sticky;left:0;z-index:20;background:var(--xlgr)}
+.mrh{
+  padding:10px 14px;font-family:var(--font-mono);font-size:.68rem;font-weight:700;
+  text-align:right;color:var(--slate);background:var(--xlgr);
+  border-right:2px solid rgba(26,86,232,.1);white-space:nowrap;
+  position:sticky;left:0;z-index:5;
+}
+.mat-pair{font-size:.7rem;font-weight:700;display:block}
+.mat-type{font-size:.6rem;color:var(--mute);font-weight:400}
+.mcell{
+  padding:0;border:1px solid rgba(203,213,225,.4);
+  cursor:pointer;transition:transform .15s;
+}
+.mcell:hover{transform:scale(1.08);z-index:5;position:relative;box-shadow:0 4px 20px rgba(0,0,0,.15)}
+.mcell-inner{
+  width:68px;height:46px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:2px;
+}
+.mcell-val{font-family:var(--font-mono);font-size:.72rem;font-weight:700}
+.mcell-bar{width:36px;height:3px;border-radius:99px;background:rgba(0,0,0,.08);overflow:hidden}
+.mcell-fill{height:100%;border-radius:99px;transition:width .5s}
+.mcell-lbl{font-size:.52rem;text-transform:uppercase;letter-spacing:.05em;opacity:.7}
+
+/* Tooltip */
+#tooltip{
+  position:fixed;z-index:9999;
+  background:rgba(10,15,30,.95);backdrop-filter:blur(16px);
+  border:1px solid rgba(26,86,232,.3);border-radius:14px;
+  padding:16px 20px;max-width:280px;pointer-events:none;
+  opacity:0;transition:opacity .15s;
+  box-shadow:0 20px 60px rgba(0,0,0,.4);
+}
+#tooltip.show{opacity:1}
+.tt-pair{
+  font-family:var(--font-display);font-size:.95rem;font-weight:800;
+  color:var(--b1);margin-bottom:4px;
+}
+.tt-val{font-family:var(--font-mono);font-size:1.6rem;font-weight:700;margin-bottom:10px}
+.tt-desc{font-size:.8rem;color:rgba(255,255,255,.65);line-height:1.6}
+.tt-rule{font-size:.8rem;color:rgba(255,255,255,.9);line-height:1.6;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.1)}
+
+/* ══════════════════════════════════════════════
+   CORRELATION CARDS (KEY PAIRS)
+══════════════════════════════════════════════ */
+.pairs-section{
+  background:linear-gradient(160deg,#F8FAFF,#F0F7FF,#EBF9F5);
+}
+.pairs-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.pair-card{
+  background:var(--w);border-radius:var(--r-lg);
+  padding:28px;border:1.5px solid rgba(26,86,232,.08);
+  transition:all .3s;position:relative;overflow:hidden;
+}
+.pair-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  transition:opacity .3s;
+}
+.pair-card:hover{transform:translateY(-6px);box-shadow:var(--shadow-lg);border-color:rgba(26,86,232,.2)}
+.pair-card:hover::before{opacity:1}
+.pc-cat{
+  font-size:.68rem;font-weight:700;letter-spacing:.15em;
+  text-transform:uppercase;margin-bottom:10px;
+  padding:4px 10px;border-radius:99px;display:inline-block;
+}
+.pc-pairs{
+  font-family:var(--font-display);font-size:1.2rem;font-weight:800;
+  color:var(--n);margin-bottom:6px;display:flex;align-items:center;gap:10px;
+}
+.pc-arrow{font-size:1.3rem}
+.pc-corr{
+  font-family:var(--font-mono);font-size:2rem;font-weight:700;
+  margin:10px 0;
+}
+.pc-bar-wrap{
+  height:6px;background:var(--xlgr);border-radius:99px;
+  margin:8px 0 12px;overflow:hidden;
+}
+.pc-bar-fill{height:100%;border-radius:99px;transition:width 1s ease}
+.pc-desc{font-size:.82rem;color:var(--mid);line-height:1.6}
+
+/* ══════════════════════════════════════════════
+   RISK ON/OFF SECTION
+══════════════════════════════════════════════ */
+.risk-section{background:var(--w)}
+.risk-toggle-wrap{
+  display:flex;gap:16px;margin-bottom:40px;
+}
+.risk-btn{
+  flex:1;padding:16px 24px;border-radius:var(--r);border:2px solid var(--lgr);
+  background:var(--w);font-size:1rem;font-weight:700;
+  transition:all .3s;display:flex;align-items:center;justify-content:center;gap:10px;
+}
+.risk-btn.risk-on.active{
+  background:linear-gradient(135deg,var(--g1),var(--t1));
+  color:#fff;border-color:transparent;
+  box-shadow:0 8px 24px rgba(5,150,105,.3);
+}
+.risk-btn.risk-off.active{
+  background:linear-gradient(135deg,var(--r1),var(--o1));
+  color:#fff;border-color:transparent;
+  box-shadow:0 8px 24px rgba(239,68,68,.3);
+}
+.risk-content{display:grid;grid-template-columns:1fr 1fr;gap:24px;transition:all .3s}
+.risk-col{
+  border-radius:var(--r-lg);padding:28px;
+  border:1.5px solid transparent;
+}
+.risk-col.positive{
+  background:linear-gradient(160deg,#F0FDF4,#DCFCE7);
+  border-color:rgba(5,150,105,.2);
+}
+.risk-col.negative{
+  background:linear-gradient(160deg,#FFF1F2,#FEE2E2);
+  border-color:rgba(239,68,68,.2);
+}
+.risk-col-title{
+  font-weight:800;font-size:1rem;margin-bottom:16px;
+  display:flex;align-items:center;gap:10px;
+}
+.risk-pair-item{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 0;border-bottom:1px solid rgba(0,0,0,.06);
+}
+.risk-pair-item:last-child{border-bottom:none}
+.rpi-pair{font-family:var(--font-mono);font-size:.82rem;font-weight:700;color:var(--n)}
+.rpi-dir{
+  font-size:.75rem;font-weight:700;padding:3px 12px;
+  border-radius:99px;
+}
+.rpi-dir.up{background:var(--mint);color:var(--g2)}
+.rpi-dir.dn{background:var(--rose);color:var(--r2)}
+.rpi-reason{font-size:.72rem;color:var(--mute);margin-top:2px}
+
+/* ══════════════════════════════════════════════
+   COMMODITY SECTION
+══════════════════════════════════════════════ */
+.commodity-section{
+  background:linear-gradient(160deg,#FFFBF0,#FFF9F0,#F0F7FF);
+}
+.comm-tabs{display:flex;gap:8px;margin-bottom:36px;flex-wrap:wrap}
+.comm-tab{
+  padding:10px 22px;border-radius:10px;border:2px solid var(--lgr);
+  font-weight:700;font-size:.875rem;background:var(--w);
+  transition:all .25s;color:var(--mid);
+}
+.comm-tab.active{
+  border-color:transparent;color:#fff;
+  box-shadow:0 4px 16px rgba(0,0,0,.15);
+}
+.comm-content{display:none}
+.comm-content.show{display:grid;grid-template-columns:1fr 1fr;gap:32px}
+.comm-left{}
+.comm-title{
+  font-family:var(--font-display);font-size:1.5rem;font-weight:800;
+  color:var(--n);margin-bottom:8px;
+}
+.comm-sub{font-size:.9rem;color:var(--mid);line-height:1.7;margin-bottom:24px}
+.comm-stat-row{display:flex;gap:16px;margin-bottom:24px}
+.comm-stat{
+  flex:1;padding:16px;border-radius:12px;background:rgba(255,255,255,.8);
+  border:1px solid rgba(0,0,0,.06);text-align:center;
+}
+.comm-stat-val{
+  font-family:var(--font-mono);font-size:1.3rem;font-weight:700;
+}
+.comm-stat-lbl{font-size:.7rem;color:var(--mute);margin-top:2px;text-transform:uppercase;letter-spacing:.1em}
+.comm-bars{}
+.comm-bar-row{
+  display:flex;align-items:center;gap:12px;margin-bottom:12px;
+}
+.cbr-pair{
+  font-family:var(--font-mono);font-size:.78rem;font-weight:700;
+  color:var(--slate);width:72px;text-align:right;flex-shrink:0;
+}
+.cbr-bar-wrap{flex:1;height:28px;background:var(--xlgr);border-radius:8px;overflow:hidden;position:relative}
+.cbr-bar{height:100%;border-radius:8px;display:flex;align-items:center;padding:0 10px;
+  font-family:var(--font-mono);font-size:.72rem;font-weight:700;color:#fff;
+  transition:width 1s ease;position:relative;overflow:hidden}
+.cbr-bar::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,rgba(255,255,255,.15),transparent);
+}
+.cbr-val{position:relative;z-index:1}
+
+/* ══════════════════════════════════════════════
+   SCENARIOS
+══════════════════════════════════════════════ */
+.scenario-section{background:var(--w)}
+.scenario-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.scenario-card{
+  border-radius:var(--r-lg);overflow:hidden;
+  border:1.5px solid rgba(26,86,232,.1);
+  transition:all .3s;
+}
+.scenario-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}
+.sc-header{padding:18px 24px;display:flex;align-items:center;gap:12px}
+.sc-num{
+  width:36px;height:36px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:1rem;color:#fff;flex-shrink:0;
+}
+.sc-title{font-weight:800;font-size:.95rem;color:var(--n);line-height:1.3}
+.sc-body{padding:0 24px 20px;background:var(--w)}
+.sc-situation{
+  font-size:.82rem;color:var(--mid);padding:12px 16px;
+  background:var(--xlgr);border-radius:10px;margin-bottom:14px;
+  border-left:3px solid var(--b1);line-height:1.6;
+}
+.sc-predictions{display:flex;flex-direction:column;gap:7px;margin-bottom:14px}
+.sc-pred{
+  display:flex;align-items:center;justify-content:space-between;
+  font-size:.82rem;
+}
+.sc-pred-pair{font-family:var(--font-mono);font-weight:700;color:var(--n)}
+.sc-pred-dir{
+  font-weight:700;font-size:.75rem;padding:3px 12px;border-radius:99px;
+}
+.sc-pred-dir.up{background:var(--mint);color:var(--g2)}
+.sc-pred-dir.dn{background:var(--rose);color:var(--r2)}
+.sc-pred-dir.neu{background:var(--amber);color:var(--gold)}
+.sc-action{
+  font-size:.8rem;color:var(--slate);padding:12px 16px;
+  border:1px solid rgba(26,86,232,.15);border-radius:10px;
+  background:var(--sky);line-height:1.6;
+}
+.sc-action strong{color:var(--b1)}
+
+/* ══════════════════════════════════════════════
+   TRADING RULES
+══════════════════════════════════════════════ */
+.rules-section{
+  background:linear-gradient(160deg,#F0F7FF,#EBF5FF,#F0FDFA);
+}
+.rules-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.rule-card{
+  background:var(--w);border-radius:var(--r-lg);
+  padding:28px;border:1.5px solid rgba(26,86,232,.08);
+  transition:all .3s;
+}
+.rule-card:hover{transform:translateY(-4px);box-shadow:var(--shadow)}
+.rule-num{
+  font-family:var(--font-mono);font-size:.72rem;font-weight:700;
+  color:var(--b1);letter-spacing:.15em;margin-bottom:10px;
+  text-transform:uppercase;
+}
+.rule-title{
+  font-family:var(--font-display);font-size:1rem;font-weight:800;
+  color:var(--n);margin-bottom:12px;line-height:1.3;
+}
+.rule-trigger{
+  background:linear-gradient(135deg,var(--sky),var(--aqua));
+  border-radius:10px;padding:12px 16px;
+  font-size:.82rem;margin-bottom:14px;border-left:3px solid var(--b1);
+  line-height:1.6;
+}
+.rule-trigger strong{color:var(--b1);font-family:var(--font-mono)}
+.rule-effects{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px}
+.rule-effect{
+  padding:5px 14px;border-radius:99px;
+  font-family:var(--font-mono);font-size:.72rem;font-weight:700;
+}
+.rule-effect.up{background:var(--mint);color:var(--g2)}
+.rule-effect.dn{background:var(--rose);color:var(--r2)}
+.rule-note{font-size:.8rem;color:var(--mid);line-height:1.6}
+
+/* ══════════════════════════════════════════════
+   QUICK REFERENCE
+══════════════════════════════════════════════ */
+.ref-section{background:var(--n);color:#fff}
+.ref-section .section-tag{color:rgba(255,255,255,.5)}
+.ref-section .section-tag::before{background:rgba(255,255,255,.4)}
+.ref-section .section-title{color:#fff}
+.ref-section .section-title span{background:linear-gradient(135deg,#60A5FA,#34D399);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.ref-section .section-sub{color:rgba(255,255,255,.6)}
+.qr-table-wrap{border-radius:var(--r-lg);overflow:hidden;border:1px solid rgba(255,255,255,.08)}
+.qr-table{width:100%;border-collapse:collapse}
+.qr-th{
+  background:rgba(255,255,255,.06);
+  padding:14px 18px;font-size:.78rem;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:rgba(255,255,255,.5);text-align:left;
+}
+.qr-td{
+  padding:13px 18px;border-top:1px solid rgba(255,255,255,.05);
+  font-size:.875rem;
+}
+.qr-td:first-child{font-family:var(--font-mono);font-weight:700;color:#fff}
+.qr-corr-pos{color:#34D399;font-family:var(--font-mono);font-weight:700}
+.qr-corr-neg{color:#F87171;font-family:var(--font-mono);font-weight:700}
+.qr-stars{color:#FBBF24;letter-spacing:-2px}
+tr:hover .qr-td{background:rgba(255,255,255,.03)}
+
+/* ══════════════════════════════════════════════
+   FOOTER
+══════════════════════════════════════════════ */
+footer{
+  background:var(--n);
+  border-top:1px solid rgba(255,255,255,.05);
+  padding:60px 80px 40px;
+}
+.footer-grid{
+  display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px;
+  margin-bottom:48px;
+}
+.footer-brand .nav-logo{margin-bottom:14px}
+.footer-brand p{font-size:.85rem;color:rgba(255,255,255,.45);line-height:1.7;max-width:280px}
+.footer-col h4{
+  font-size:.78rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;
+  color:rgba(255,255,255,.4);margin-bottom:16px;
+}
+.footer-col a{
+  display:block;font-size:.875rem;color:rgba(255,255,255,.55);
+  margin-bottom:10px;transition:color .2s;
+}
+.footer-col a:hover{color:rgba(255,255,255,.9)}
+.footer-bottom{
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;
+  padding-top:24px;border-top:1px solid rgba(255,255,255,.06);
+  font-size:.78rem;color:rgba(255,255,255,.3);
+}
+.footer-disclaimer{
+  font-size:.72rem;color:rgba(255,255,255,.25);line-height:1.6;
+  padding:16px;background:rgba(255,255,255,.03);border-radius:10px;
+  margin-bottom:24px;
+}
+
+/* ══════════════════════════════════════════════
+   ANIMATE ON SCROLL
+══════════════════════════════════════════════ */
+.fade-up{opacity:0;transform:translateY(30px);transition:opacity .7s ease,transform .7s ease}
+.fade-up.visible{opacity:1;transform:translateY(0)}
+.fade-in{opacity:0;transition:opacity .7s ease}
+.fade-in.visible{opacity:1}
+.stagger > *{opacity:0;transform:translateY(20px);transition:opacity .6s ease,transform .6s ease}
+.stagger.visible > *:nth-child(1){opacity:1;transform:none;transition-delay:.1s}
+.stagger.visible > *:nth-child(2){opacity:1;transform:none;transition-delay:.2s}
+.stagger.visible > *:nth-child(3){opacity:1;transform:none;transition-delay:.3s}
+.stagger.visible > *:nth-child(4){opacity:1;transform:none;transition-delay:.4s}
+.stagger.visible > *:nth-child(5){opacity:1;transform:none;transition-delay:.5s}
+.stagger.visible > *:nth-child(6){opacity:1;transform:none;transition-delay:.6s}
+
+/* ══════════════════════════════════════════════
+   UTILITIES
+══════════════════════════════════════════════ */
+.container{max-width:1200px;margin:0 auto}
+.text-center{text-align:center}
+.text-center .section-sub{margin:0 auto 50px}
+.badge-major{background:rgba(26,86,232,.1);color:var(--b1)}
+.badge-minor{background:rgba(8,145,178,.1);color:var(--t2)}
+.badge-comm{background:rgba(217,119,6,.1);color:var(--gold)}
+.badge-pos{background:var(--mint);color:var(--g2)}
+.badge-neg{background:var(--rose);color:var(--r2)}
+.divider{height:1px;background:linear-gradient(90deg,transparent,var(--lgr),transparent);margin:0}
+
+/* Mobile responsive */
+@media(max-width:1100px){
+  .hero-visual{display:none}
+  .hero{padding:140px 40px 80px}
+  section{padding:80px 40px}
+  .pairs-grid{grid-template-columns:1fr 1fr}
+  .scenario-grid{grid-template-columns:1fr}
+}
+@media(max-width:768px){
+  nav{padding:0 20px}
+  .nav-links{display:none}
+  .hero{padding:130px 24px 70px}
+  section{padding:70px 24px}
+  .pairs-grid{grid-template-columns:1fr}
+  .comm-content.show{grid-template-columns:1fr}
+  .risk-content{grid-template-columns:1fr}
+  .rules-grid{grid-template-columns:1fr}
+  .legend-grid{grid-template-columns:1fr 1fr}
+  .footer-grid{grid-template-columns:1fr 1fr}
+  footer{padding:40px 24px 30px}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="navbar">
+  <div class="nav-logo">
+    <div class="nav-logo-icon">FX</div>
+    FXMatrix
+  </div>
+  <div class="nav-links">
+    <a href="#matrix">Matriks</a>
+    <a href="#pairs">Pair Utama</a>
+    <a href="#risk">Risk Mode</a>
+    <a href="#commodity">Komoditas</a>
+    <a href="#scenarios">Skenario</a>
+    <a href="#rules">Aturan</a>
+    <a class="nav-cta" href="#matrix">Lihat Matriks</a>
+  </div>
+</nav>
+
+<!-- TICKER -->
+<div class="ticker-wrap">
+  <div class="ticker-inner" id="ticker"></div>
+</div>
+
+<!-- HERO -->
+<section class="hero" id="home">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+
+  <div class="hero-content">
+    <div class="hero-badge">
+      <div class="badge-dot"></div>
+      Forex Intelligence Platform
+    </div>
+    <h1 class="hero-title">
+      Kuasai Korelasi<br>
+      <span>Mata Uang Dunia</span>
+    </h1>
+    <p class="hero-sub">
+      Panduan visual interaktif korelasi 14 pasang mata uang & komoditas paling aktif diperdagangkan. Pahami kapan EUR/USD naik maka USD/CHF turun, dan ratusan pola lainnya.
+    </p>
+    <div class="hero-actions">
+      <a href="#matrix" class="btn-primary">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Lihat Matriks Lengkap
+      </a>
+      <a href="#rules" class="btn-secondary">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        Aturan Trading
+      </a>
+    </div>
+    <div class="hero-stats">
+      <div class="hstat">
+        <div class="hstat-num" data-count="14">0</div>
+        <div class="hstat-label">Pasang Dianalisis</div>
+      </div>
+      <div class="hero-divider"></div>
+      <div class="hstat">
+        <div class="hstat-num">$<span data-count="75" data-suffix="T">0</span></div>
+        <div class="hstat-label">Volume Harian (×$100M)</div>
+      </div>
+      <div class="hero-divider"></div>
+      <div class="hstat">
+        <div class="hstat-num" data-corr="-0.92">—</div>
+        <div class="hstat-label">Korelasi Terkuat</div>
+      </div>
+      <div class="hero-divider"></div>
+      <div class="hstat">
+        <div class="hstat-num" data-count="91">0<span>%</span></div>
+        <div class="hstat-label">Akurasi EUR↔CHF</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mini matrix visual -->
+  <div class="hero-visual">
+    <div class="mini-matrix-card">
+      <div class="mini-matrix-title">
+        Matriks Korelasi 7×7
+        <span>Live Preview</span>
+      </div>
+      <div class="mini-grid" id="miniGrid"></div>
+    </div>
+    <div class="float-card" style="animation:heroVisualIn .8s ease .7s both;opacity:0">
+      <div class="float-icon" style="background:linear-gradient(135deg,#D1FAE5,#A7F3D0)">📈</div>
+      <div>
+        <div class="float-val" style="color:#059669">+0.92</div>
+        <div class="float-lbl">AUD/USD ↔ NZD/USD</div>
+      </div>
+    </div>
+    <div class="float-card" style="animation:heroVisualIn .8s ease 1s both;opacity:0">
+      <div class="float-icon" style="background:linear-gradient(135deg,#FEE2E2,#FECACA)">📉</div>
+      <div>
+        <div class="float-val" style="color:#DC2626">-0.91</div>
+        <div class="float-lbl">EUR/USD ↔ USD/CHF</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LEGEND -->
+<section class="legend-section" style="padding:60px 80px">
+  <div style="text-align:center;margin-bottom:32px" class="fade-up">
+    <div class="section-tag" style="justify-content:center">Panduan Warna</div>
+    <div class="section-title" style="font-size:1.6rem">Cara Membaca Nilai Korelasi</div>
+  </div>
+  <div class="legend-grid stagger">
+    <div class="leg-card" style="background:linear-gradient(160deg,#F0FDF4,#DCFCE7);border-color:rgba(5,150,105,.2)">
+      <div class="leg-range" style="color:#059669">+0.70 → +1.00</div>
+      <div class="leg-label">Sangat Positif</div>
+      <div class="leg-example">AUD/USD & NZD/USD (+0.92)</div>
+      <div class="leg-bar" style="background:linear-gradient(90deg,#10B981,#059669)"></div>
+      <div style="font-size:.75rem;color:#064E3B;margin-top:4px">Bergerak searah sangat kuat ↑↑</div>
+    </div>
+    <div class="leg-card" style="background:linear-gradient(160deg,#F0FDF4,#ECFDF5);border-color:rgba(16,185,129,.15)">
+      <div class="leg-range" style="color:#0D9488">+0.30 → +0.70</div>
+      <div class="leg-label">Positif Moderat</div>
+      <div class="leg-example">EUR/USD & AUD/USD (+0.68)</div>
+      <div class="leg-bar" style="background:linear-gradient(90deg,#34D399,#10B981)"></div>
+      <div style="font-size:.75rem;color:#065F46;margin-top:4px">Cenderung searah ↑↗</div>
+    </div>
+    <div class="leg-card" style="background:linear-gradient(160deg,#F8FAFC,#F1F5F9);border-color:rgba(148,163,184,.2)">
+      <div class="leg-range" style="color:#64748B">-0.30 → +0.30</div>
+      <div class="leg-label">Netral</div>
+      <div class="leg-example">EUR/GBP & WTI (+0.10)</div>
+      <div class="leg-bar" style="background:linear-gradient(90deg,#94A3B8,#64748B)"></div>
+      <div style="font-size:.75rem;color:#475569;margin-top:4px">Tidak ada pola konsisten →</div>
+    </div>
+    <div class="leg-card" style="background:linear-gradient(160deg,#FFF7ED,#FFEDD5);border-color:rgba(249,115,22,.15)">
+      <div class="leg-range" style="color:#EA580C">-0.70 → -0.30</div>
+      <div class="leg-label">Negatif Moderat</div>
+      <div class="leg-example">EUR/USD & USD/CAD (-0.55)</div>
+      <div class="leg-bar" style="background:linear-gradient(90deg,#FB923C,#EF4444)"></div>
+      <div style="font-size:.75rem;color:#7C2D12;margin-top:4px">Cenderung berlawanan ↓↗</div>
+    </div>
+    <div class="leg-card" style="background:linear-gradient(160deg,#FFF1F2,#FEE2E2);border-color:rgba(239,68,68,.2)">
+      <div class="leg-range" style="color:#DC2626">-1.00 → -0.70</div>
+      <div class="leg-label">Sangat Negatif</div>
+      <div class="leg-example">EUR/USD & USD/CHF (-0.91)</div>
+      <div class="leg-bar" style="background:linear-gradient(90deg,#EF4444,#DC2626)"></div>
+      <div style="font-size:.75rem;color:#7F1D1D;margin-top:4px">Berlawanan sangat kuat ↑↓</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- MATRIX -->
+<section class="matrix-section" id="matrix">
+  <div class="text-center fade-up">
+    <div class="section-tag" style="justify-content:center">Matriks Lengkap</div>
+    <h2 class="section-title">Korelasi <span>14 Pair</span> Sekaligus</h2>
+    <p class="section-sub">Hover setiap sel untuk melihat penjelasan detail. Warna hijau = searah, merah = berlawanan.</p>
+  </div>
+  <div class="matrix-container fade-up">
+    <table class="matrix-table" id="corrTable"></table>
+  </div>
+  <div style="text-align:center;margin-top:16px" class="fade-in">
+    <span style="font-size:.78rem;color:var(--mute)">💡 Hover sel untuk detail korelasi · Klik sel untuk highlight baris/kolom</span>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- KEY PAIRS -->
+<section class="pairs-section" id="pairs">
+  <div class="fade-up">
+    <div class="section-tag">Pair Kunci</div>
+    <h2 class="section-title">Korelasi Paling <span>Penting</span> untuk Trader</h2>
+    <p class="section-sub">Enam pasangan korelasi yang wajib dipahami setiap trader — dari yang paling konsisten hingga yang paling menguntungkan untuk hedging.</p>
+  </div>
+  <div class="pairs-grid stagger" id="pairsGrid"></div>
+</section>
+
+<!-- RISK -->
+<section class="risk-section" id="risk">
+  <div class="fade-up">
+    <div class="section-tag">Sentimen Pasar</div>
+    <h2 class="section-title"><span>Risk On</span> vs <span>Risk Off</span></h2>
+    <p class="section-sub">Kondisi pasar berubah drastis antara optimisme dan kepanikan. Pahami pair mana yang menguat atau melemah di setiap kondisi.</p>
+  </div>
+  <div class="risk-toggle-wrap fade-up">
+    <button class="risk-btn risk-on active" id="riskOnBtn" onclick="setRisk('on')">
+      🚀 RISK ON — Pasar Optimis
+    </button>
+    <button class="risk-btn risk-off" id="riskOffBtn" onclick="setRisk('off')">
+      🚨 RISK OFF — Pasar Panik
+    </button>
+  </div>
+  <div class="risk-content fade-up" id="riskContent"></div>
+</section>
+
+<!-- COMMODITY -->
+<section class="commodity-section" id="commodity">
+  <div class="fade-up">
+    <div class="section-tag">Komoditas</div>
+    <h2 class="section-title">Komoditas <span>vs</span> Forex</h2>
+    <p class="section-sub">Emas, perak, dan minyak memiliki hubungan fundamental yang kuat dengan mata uang negara produsen dan konsumennya.</p>
+  </div>
+  <div class="comm-tabs fade-up" id="commTabs"></div>
+  <div id="commContent"></div>
+</section>
+
+<div class="divider"></div>
+
+<!-- SCENARIOS -->
+<section class="scenario-section" id="scenarios">
+  <div class="fade-up">
+    <div class="section-tag">Contoh Nyata</div>
+    <h2 class="section-title">Skenario <span>Trading</span> Berdasarkan Korelasi</h2>
+    <p class="section-sub">Empat situasi market yang sering terjadi — dan bagaimana menggunakan korelasi untuk membuat keputusan trading yang tepat.</p>
+  </div>
+  <div class="scenario-grid" id="scenarioGrid"></div>
+</section>
+
+<!-- RULES -->
+<section class="rules-section" id="rules">
+  <div class="fade-up text-center">
+    <div class="section-tag" style="justify-content:center">Aturan Emas</div>
+    <h2 class="section-title">4 Hukum <span>Korelasi</span> yang Wajib Dihapal</h2>
+    <p class="section-sub">Pola korelasi yang paling konsisten — berlaku hampir setiap hari di pasar forex global.</p>
+  </div>
+  <div class="rules-grid stagger" id="rulesGrid"></div>
+</section>
+
+<!-- QUICK REF -->
+<section class="ref-section" id="reference" style="padding:100px 80px">
+  <div class="text-center fade-up">
+    <div class="section-tag">Cheat Sheet</div>
+    <h2 class="section-title">Referensi Cepat: <span>12 Korelasi Terkuat</span></h2>
+    <p class="section-sub">Tempel di meja trading Anda. Daftar korelasi paling dapat diandalkan di pasar forex.</p>
+  </div>
+  <div class="qr-table-wrap fade-up">
+    <table class="qr-table" id="qrTable"></table>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-disclaimer">
+    ⚠️ <strong>Disclaimer:</strong> Website ini dibuat semata-mata untuk tujuan edukasi. Nilai korelasi bersifat historis dan tipikal — tidak menjamin pergerakan masa depan. Trading forex dan komoditas mengandung risiko kerugian yang signifikan. Selalu gunakan manajemen risiko yang tepat dan konsultasikan dengan penasihat keuangan berlisensi.
+  </div>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <div class="nav-logo" style="color:rgba(255,255,255,.9)">
+        <div class="nav-logo-icon">FX</div>
+        FXMatrix
+      </div>
+      <p>Platform edukasi korelasi mata uang dan komoditas untuk trader forex profesional maupun pemula.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Navigasi</h4>
+      <a href="#matrix">Matriks Korelasi</a>
+      <a href="#pairs">Pair Utama</a>
+      <a href="#risk">Risk On/Off</a>
+      <a href="#commodity">Komoditas</a>
+    </div>
+    <div class="footer-col">
+      <h4>Analisis</h4>
+      <a href="#scenarios">Skenario Trading</a>
+      <a href="#rules">Aturan Emas</a>
+      <a href="#reference">Cheat Sheet</a>
+    </div>
+    <div class="footer-col">
+      <h4>Pasangan</h4>
+      <a href="#pairs">Major Pairs</a>
+      <a href="#pairs">Minor Pairs</a>
+      <a href="#commodity">Komoditas</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2025 FXMatrix Intelligence · Untuk Tujuan Edukasi</span>
+    <span style="display:flex;align-items:center;gap:8px">
+      <span style="width:6px;height:6px;border-radius:50%;background:#10B981;display:inline-block;animation:dotPulse 2s infinite"></span>
+      Data korelasi tipikal jangka menengah (30-90 hari)
+    </span>
+  </div>
+</footer>
+
+<!-- TOOLTIP -->
+<div id="tooltip">
+  <div class="tt-pair" id="ttPair"></div>
+  <div class="tt-val" id="ttVal"></div>
+  <div class="tt-desc" id="ttDesc"></div>
+  <div class="tt-rule" id="ttRule"></div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     JAVASCRIPT
+════════════════════════════════════════════ -->
+<script>
+// ══════════════════════════
+// DATA
+// ══════════════════════════
+const PAIRS = ['EUR/USD','GBP/USD','USD/JPY','USD/CHF','AUD/USD','NZD/USD',
+               'USD/CAD','EUR/GBP','EUR/JPY','GBP/JPY','AUD/JPY',
+               'XAU/USD','XAG/USD','WTI/USD'];
+
+const PAIR_CAT = {
+  'EUR/USD':'Major','GBP/USD':'Major','USD/JPY':'Major','USD/CHF':'Major',
+  'AUD/USD':'Major','NZD/USD':'Major','USD/CAD':'Major',
+  'EUR/GBP':'Minor','EUR/JPY':'Minor','GBP/JPY':'Minor','AUD/JPY':'Minor',
+  'XAU/USD':'Komoditas','XAG/USD':'Komoditas','WTI/USD':'Komoditas'
+};
+
+const CORR = {
+  'EUR/USD':{'EUR/USD':1.00,'GBP/USD':0.89,'USD/JPY':-0.82,'USD/CHF':-0.91,'AUD/USD':0.68,'NZD/USD':0.62,'USD/CAD':-0.55,'EUR/GBP':0.45,'EUR/JPY':0.38,'GBP/JPY':0.28,'AUD/JPY':-0.10,'XAU/USD':0.72,'XAG/USD':0.65,'WTI/USD':0.30},
+  'GBP/USD':{'EUR/USD':0.89,'GBP/USD':1.00,'USD/JPY':-0.76,'USD/CHF':-0.82,'AUD/USD':0.65,'NZD/USD':0.58,'USD/CAD':-0.50,'EUR/GBP':-0.18,'EUR/JPY':0.30,'GBP/JPY':0.52,'AUD/JPY':-0.05,'XAU/USD':0.66,'XAG/USD':0.60,'WTI/USD':0.25},
+  'USD/JPY':{'EUR/USD':-0.82,'GBP/USD':-0.76,'USD/JPY':1.00,'USD/CHF':0.74,'AUD/USD':-0.55,'NZD/USD':-0.48,'USD/CAD':0.40,'EUR/GBP':-0.20,'EUR/JPY':0.42,'GBP/JPY':0.58,'AUD/JPY':0.68,'XAU/USD':-0.65,'XAG/USD':-0.58,'WTI/USD':-0.20},
+  'USD/CHF':{'EUR/USD':-0.91,'GBP/USD':-0.82,'USD/JPY':0.74,'USD/CHF':1.00,'AUD/USD':-0.62,'NZD/USD':-0.55,'USD/CAD':0.52,'EUR/GBP':-0.35,'EUR/JPY':-0.30,'GBP/JPY':-0.22,'AUD/JPY':0.05,'XAU/USD':-0.70,'XAG/USD':-0.62,'WTI/USD':-0.28},
+  'AUD/USD':{'EUR/USD':0.68,'GBP/USD':0.65,'USD/JPY':-0.55,'USD/CHF':-0.62,'AUD/USD':1.00,'NZD/USD':0.92,'USD/CAD':-0.78,'EUR/GBP':0.18,'EUR/JPY':0.22,'GBP/JPY':0.18,'AUD/JPY':0.42,'XAU/USD':0.82,'XAG/USD':0.78,'WTI/USD':0.55},
+  'NZD/USD':{'EUR/USD':0.62,'GBP/USD':0.58,'USD/JPY':-0.48,'USD/CHF':-0.55,'AUD/USD':0.92,'NZD/USD':1.00,'USD/CAD':-0.72,'EUR/GBP':0.15,'EUR/JPY':0.18,'GBP/JPY':0.15,'AUD/JPY':0.38,'XAU/USD':0.75,'XAG/USD':0.72,'WTI/USD':0.48},
+  'USD/CAD':{'EUR/USD':-0.55,'GBP/USD':-0.50,'USD/JPY':0.40,'USD/CHF':0.52,'AUD/USD':-0.78,'NZD/USD':-0.72,'USD/CAD':1.00,'EUR/GBP':-0.10,'EUR/JPY':-0.18,'GBP/JPY':-0.12,'AUD/JPY':-0.30,'XAU/USD':-0.62,'XAG/USD':-0.58,'WTI/USD':-0.82},
+  'EUR/GBP':{'EUR/USD':0.45,'GBP/USD':-0.18,'USD/JPY':-0.20,'USD/CHF':-0.35,'AUD/USD':0.18,'NZD/USD':0.15,'USD/CAD':-0.10,'EUR/GBP':1.00,'EUR/JPY':0.40,'GBP/JPY':-0.25,'AUD/JPY':-0.05,'XAU/USD':0.22,'XAG/USD':0.18,'WTI/USD':0.10},
+  'EUR/JPY':{'EUR/USD':0.38,'GBP/USD':0.30,'USD/JPY':0.42,'USD/CHF':-0.30,'AUD/USD':0.22,'NZD/USD':0.18,'USD/CAD':-0.18,'EUR/GBP':0.40,'EUR/JPY':1.00,'GBP/JPY':0.88,'AUD/JPY':0.72,'XAU/USD':0.20,'XAG/USD':0.18,'WTI/USD':0.12},
+  'GBP/JPY':{'EUR/USD':0.28,'GBP/USD':0.52,'USD/JPY':0.58,'USD/CHF':-0.22,'AUD/USD':0.18,'NZD/USD':0.15,'USD/CAD':-0.12,'EUR/GBP':-0.25,'EUR/JPY':0.88,'GBP/JPY':1.00,'AUD/JPY':0.78,'XAU/USD':0.15,'XAG/USD':0.12,'WTI/USD':0.08},
+  'AUD/JPY':{'EUR/USD':-0.10,'GBP/USD':-0.05,'USD/JPY':0.68,'USD/CHF':0.05,'AUD/USD':0.42,'NZD/USD':0.38,'USD/CAD':-0.30,'EUR/GBP':-0.05,'EUR/JPY':0.72,'GBP/JPY':0.78,'AUD/JPY':1.00,'XAU/USD':0.38,'XAG/USD':0.35,'WTI/USD':0.30},
+  'XAU/USD':{'EUR/USD':0.72,'GBP/USD':0.66,'USD/JPY':-0.65,'USD/CHF':-0.70,'AUD/USD':0.82,'NZD/USD':0.75,'USD/CAD':-0.62,'EUR/GBP':0.22,'EUR/JPY':0.20,'GBP/JPY':0.15,'AUD/JPY':0.38,'XAU/USD':1.00,'XAG/USD':0.92,'WTI/USD':0.58},
+  'XAG/USD':{'EUR/USD':0.65,'GBP/USD':0.60,'USD/JPY':-0.58,'USD/CHF':-0.62,'AUD/USD':0.78,'NZD/USD':0.72,'USD/CAD':-0.58,'EUR/GBP':0.18,'EUR/JPY':0.18,'GBP/JPY':0.12,'AUD/JPY':0.35,'XAU/USD':0.92,'XAG/USD':1.00,'WTI/USD':0.55},
+  'WTI/USD':{'EUR/USD':0.30,'GBP/USD':0.25,'USD/JPY':-0.20,'USD/CHF':-0.28,'AUD/USD':0.55,'NZD/USD':0.48,'USD/CAD':-0.82,'EUR/GBP':0.10,'EUR/JPY':0.12,'GBP/JPY':0.08,'AUD/JPY':0.30,'XAU/USD':0.58,'XAG/USD':0.55,'WTI/USD':1.00}
+};
+
+const TOOLTIP_INFO = {
+  'EUR/USD|USD/CHF':'EUR/USD dan USD/CHF adalah mirror image. Keduanya terhubung ke ekonomi Eropa vs USD. Korelasi -0.91 adalah yang terkuat karena bersifat mekanis — CHF bergerak hampir identik dengan Euro.',
+  'EUR/USD|GBP/USD':'Euro dan Pound adalah dua mata uang Eropa terbesar. Keduanya bergerak searah karena sama-sama "melawan" USD. Sentimen risiko Eropa mempengaruhi keduanya secara bersamaan.',
+  'EUR/USD|USD/JPY':'JPY adalah safe haven Asia. Saat EUR/USD naik (USD melemah), USD/JPY turun karena investor meninggalkan JPY kembali ke risk assets.',
+  'AUD/USD|NZD/USD':'Pasangan ini hampir identik (+0.92). Australia dan NZ adalah tetangga dengan ekonomi komoditas serupa. Kebijakan RBA dan RBNZ pun sering bergerak serempak.',
+  'AUD/USD|XAU/USD':'Australia adalah produsen emas terbesar ke-2 dunia. Harga emas naik → pendapatan ekspor Australia meningkat → AUD menguat. Korelasi fundamental sangat kuat.',
+  'WTI/USD|USD/CAD':'Korelasi terkuat di antara komoditas-forex. 17% GDP Kanada dari ekspor energi ke AS. WTI naik $10 → USD/CAD bisa turun 50-100 pip.',
+  'XAU/USD|XAG/USD':'Emas dan perak adalah sesama precious metals safe haven. Bergerak hampir identik di semua kondisi. Perbedaan: perak lebih volatile dan punya komponen industrial.',
+  'EUR/USD|XAU/USD':'Keduanya bergerak berlawanan dengan USD. Saat dolar melemah, EUR naik dan emas (dihargai dalam USD) juga naik. Hubungan inversely-USD.',
+  'USD/CAD|AUD/USD':'Keduanya commodity currencies tapi posisi berbeda. AUD/USD positif terhadap risk, USD/CAD negatif. Korelasi -0.78 karena keduanya mengikuti risk appetite global dari sisi berlawanan.',
+  'EUR/JPY|GBP/JPY':'Dua cross JPY paling diperdagangkan. Korelasi +0.88. Keduanya digunakan sebagai proxy sentimen risiko global — naik saat risk-on, turun saat risk-off.',
+};
+
+function getTip(p1, p2) {
+  return TOOLTIP_INFO[`${p1}|${p2}`] || TOOLTIP_INFO[`${p2}|${p1}`] ||
+    `Korelasi tipikal antara ${p1} dan ${p2}. Nilai menunjukkan kekuatan dan arah hubungan pergerakan harga historis jangka menengah.`;
+}
+
+// ══════════════════════════
+// COLOR HELPERS
+// ══════════════════════════
+function cellBg(v) {
+  if(Math.abs(v)<.01) return '#F1F5F9';
+  if(v>=0.7)  return '#DCFCE7';
+  if(v>=0.3)  return '#ECFDF5';
+  if(v>-0.3)  return '#F8FAFC';
+  if(v>-0.7)  return '#FEF3C7';
+  return '#FEE2E2';
+}
+function cellTxt(v) {
+  if(Math.abs(v)<.01) return '#94A3B8';
+  if(v>=0.7)  return '#047857';
+  if(v>=0.3)  return '#0D9488';
+  if(v>-0.3)  return '#64748B';
+  if(v>-0.7)  return '#C2410C';
+  return '#991B1B';
+}
+function barFill(v) {
+  if(v>=0.3)  return 'linear-gradient(90deg,#10B981,#059669)';
+  if(v>-0.3)  return 'linear-gradient(90deg,#94A3B8,#64748B)';
+  return 'linear-gradient(90deg,#F97316,#EF4444)';
+}
+
+// ══════════════════════════
+// TICKER
+// ══════════════════════════
+function buildTicker() {
+  const items = [
+    {pair:'EUR/USD',val:'1.0842',dir:'up',delta:'+0.0028'},
+    {pair:'GBP/USD',val:'1.2714',dir:'up',delta:'+0.0041'},
+    {pair:'USD/JPY',val:'149.82',dir:'dn',delta:'-0.52'},
+    {pair:'USD/CHF',val:'0.8956',dir:'dn',delta:'-0.0019'},
+    {pair:'AUD/USD',val:'0.6438',dir:'up',delta:'+0.0017'},
+    {pair:'NZD/USD',val:'0.5892',dir:'up',delta:'+0.0014'},
+    {pair:'USD/CAD',val:'1.3710',dir:'dn',delta:'-0.0022'},
+    {pair:'EUR/GBP',val:'0.8528',dir:'dn',delta:'-0.0008'},
+    {pair:'EUR/JPY',val:'162.40',dir:'up',delta:'+0.38'},
+    {pair:'GBP/JPY',val:'190.55',dir:'up',delta:'+0.62'},
+    {pair:'AUD/JPY',val:'96.44',dir:'up',delta:'+0.24'},
+    {pair:'XAU/USD',val:'2,312',dir:'up',delta:'+8.40'},
+    {pair:'XAG/USD',val:'27.18',dir:'up',delta:'+0.34'},
+    {pair:'WTI/USD',val:'82.45',dir:'dn',delta:'-0.78'},
+  ];
+  const html = [...items,...items].map(i=>`
+    <div class="tick-item">
+      <span class="tick-pair">${i.pair}</span>
+      <span class="tick-val">${i.val}</span>
+      <span class="tick-arrow ${i.dir}">${i.dir==='up'?'▲':'▼'} ${i.delta}</span>
+    </div>
+  `).join('');
+  document.getElementById('ticker').innerHTML = html;
+}
+
+// ══════════════════════════
+// MINI MATRIX (hero)
+// ══════════════════════════
+function buildMiniMatrix() {
+  const mini = ['EUR/USD','GBP/USD','USD/JPY','USD/CHF','AUD/USD','NZD/USD','XAU/USD'];
+  const el = document.getElementById('miniGrid');
+  if(!el) return;
+  let html = '';
+  for(let r of mini) {
+    for(let c of mini) {
+      const v = CORR[r][c];
+      const bg = cellBg(v);
+      const tc = cellTxt(v);
+      const txt = r===c ? '—' : (v>0?'+':'')+v.toFixed(2);
+      html += `<div class="mc" style="background:${bg};color:${tc}" title="${r} ↔ ${c}: ${txt}">${txt}</div>`;
+    }
+  }
+  el.innerHTML = html;
+}
+
+// ══════════════════════════
+// FULL MATRIX
+// ══════════════════════════
+function buildMatrix() {
+  const t = document.getElementById('corrTable');
+  // Header
+  let htr = '<thead><tr>';
+  htr += `<th class="mth" style="min-width:90px;text-align:right">PAIR ↓</th>`;
+  PAIRS.forEach(p=>{
+    const cat = PAIR_CAT[p];
+    const col = cat==='Major'?'var(--b1)':cat==='Minor'?'var(--t1)':'var(--gold)';
+    htr += `<th class="mth" style="min-width:68px"><span style="color:${col}">${p}</span></th>`;
+  });
+  htr += '</tr></thead>';
+
+  let body = '<tbody>';
+  PAIRS.forEach((rp,ri)=>{
+    const cat = PAIR_CAT[rp];
+    const catcol = cat==='Major'?'var(--b1)':cat==='Minor'?'var(--t1)':'var(--gold)';
+    body += `<tr>`;
+    body += `<td class="mrh"><span class="mat-pair" style="color:${catcol}">${rp}</span><span class="mat-type">${cat}</span></td>`;
+    PAIRS.forEach(cp=>{
+      const v = CORR[rp][cp];
+      const isSelf = rp===cp;
+      const bg = cellBg(v);
+      const tc = cellTxt(v);
+      const txt = isSelf ? '—' : (v>0?'+':'')+v.toFixed(2);
+      const bw = Math.round(Math.abs(v)*100);
+      const bf = barFill(v);
+      const lbl = isSelf?'SELF':Math.abs(v)>=0.7?(v>0?'KUAT ▲':'KUAT ▼'):Math.abs(v)>=0.3?(v>0?'MILD ▲':'MILD ▼'):'NETRAL';
+      body += `<td class="mcell" style="background:${bg}" data-r="${rp}" data-c="${cp}" data-v="${v}" onmouseenter="showTip(event,this)" onmouseleave="hideTip()">
+        <div class="mcell-inner">
+          <span class="mcell-val" style="color:${tc}">${txt}</span>
+          ${!isSelf?`<div class="mcell-bar"><div class="mcell-fill" style="width:${bw}%;background:${bf}"></div></div>`:''}
+          <span class="mcell-lbl" style="color:${tc}">${lbl}</span>
+        </div>
+      </td>`;
+    });
+    body += '</tr>';
+  });
+  body += '</tbody>';
+  t.innerHTML = htr + body;
+}
+
+// ══════════════════════════
+// TOOLTIP
+// ══════════════════════════
+const tt = document.getElementById('tooltip');
+function showTip(e, el) {
+  const r = el.dataset.r, c = el.dataset.c, v = parseFloat(el.dataset.v);
+  if(r===c) return;
+  const tc = cellTxt(v);
+  const dir = v>=0.3?'Bergerak <b>SEARAH</b>':v<=-0.3?'Bergerak <b>BERLAWANAN</b>':'Tidak konsisten';
+  const str = Math.abs(v)>=0.7?'Sangat Kuat':Math.abs(v)>=0.3?'Moderat':'Lemah';
+  document.getElementById('ttPair').textContent = `${r} ↔ ${c}`;
+  document.getElementById('ttVal').innerHTML = `<span style="color:${tc}">${v>0?'+':''}${v.toFixed(2)}</span>`;
+  document.getElementById('ttDesc').innerHTML = `${dir} · Kekuatan: <b>${str}</b>`;
+  document.getElementById('ttRule').innerHTML = getTip(r,c);
+  tt.classList.add('show');
+  moveTip(e);
+}
+document.addEventListener('mousemove', e => {
+  if(tt.classList.contains('show')) moveTip(e);
+});
+function moveTip(e) {
+  const x = Math.min(e.clientX+14, window.innerWidth-290);
+  const y = Math.max(e.clientY-14, 10);
+  tt.style.left = x+'px'; tt.style.top = y+'px';
+}
+function hideTip() { tt.classList.remove('show'); }
+
+// ══════════════════════════
+// KEY PAIRS CARDS
+// ══════════════════════════
+const KEY_PAIRS = [
+  {p1:'EUR/USD',p2:'USD/CHF',v:-0.91,cat:'Safe Haven Mirror',
+   why:'EUR/USD naik → USD melemah → USD/CHF otomatis turun. Hubungan mekanis terkuat di forex.',
+   tip:'Gunakan untuk konfirmasi sinyal. Jika EUR/USD bullish tapi USD/CHF tidak turun, waspadai sinyal palsu.',
+   grad:'linear-gradient(135deg,#EF4444,#F97316)',badge:'neg'},
+  {p1:'AUD/USD',p2:'NZD/USD',v:0.92,cat:'Commodity Twins',
+   why:'Australia dan Selandia Baru — tetangga ekonomi Pasifik dengan ekspor komoditas identik.',
+   tip:'Jangan buka LONG AUD/USD + LONG NZD/USD bersamaan. Exposure yang sama = risiko dobel!',
+   grad:'linear-gradient(135deg,#10B981,#0D9488)',badge:'pos'},
+  {p1:'WTI/USD',p2:'USD/CAD',v:-0.82,cat:'Oil & Loonie',
+   why:'Kanada mengekspor 4 juta barel/hari ke AS. Harga minyak naik langsung menguatkan CAD.',
+   tip:'Pantau harga WTI sebagai leading indicator USD/CAD. Korelasi -0.82 paling dapat diandalkan.',
+   grad:'linear-gradient(135deg,#7C3AED,#1A56E8)',badge:'neg'},
+  {p1:'AUD/USD',p2:'XAU/USD',v:0.82,cat:'Gold Nation',
+   why:'Australia = produsen emas terbesar ke-2 dunia. Ekspor emas sangat menentukan pendapatan nasional.',
+   tip:'Emas breakout ke atas? Pertimbangkan LONG AUD/USD sebagai proxy yang lebih likuid.',
+   grad:'linear-gradient(135deg,#D97706,#F59E0B)',badge:'pos'},
+  {p1:'EUR/JPY',p2:'GBP/JPY',v:0.88,cat:'JPY Cross Risk',
+   why:'Kedua cross JPY ini naik saat risk-on dan turun saat risk-off. Proxy sentimen pasar paling akurat.',
+   tip:'EUR/JPY dan GBP/JPY sering menjadi leading indicator sebelum pergerakan besar di USD pairs.',
+   grad:'linear-gradient(135deg,#6366F1,#0D9488)',badge:'pos'},
+  {p1:'XAU/USD',p2:'XAG/USD',v:0.92,cat:'Precious Metals',
+   why:'Emas dan perak diperlakukan sama oleh investor sebagai safe haven dan hedge inflasi.',
+   tip:'Perak lebih volatile dari emas (~2x). Sinyal emas lebih reliable, tapi perak memberikan return lebih besar.',
+   grad:'linear-gradient(135deg,#94A3B8,#64748B)',badge:'pos'},
+];
+
+function buildPairs() {
+  const el = document.getElementById('pairsGrid');
+  el.innerHTML = KEY_PAIRS.map(p=>{
+    const barW = Math.round(Math.abs(p.v)*100);
+    const barColor = p.v>0 ? 'linear-gradient(90deg,#10B981,#059669)' : 'linear-gradient(90deg,#F97316,#EF4444)';
+    const valColor = p.v>0 ? '#047857' : '#991B1B';
+    const catBg = p.v>0 ? 'var(--mint)' : 'var(--rose)';
+    const catC  = p.v>0 ? 'var(--g2)' : 'var(--r2)';
+    const arrow = p.v>0 ? '↑↑' : '↑↓';
+    return `
+    <div class="pair-card">
+      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:${p.grad}"></div>
+      <div class="pc-cat" style="background:${catBg};color:${catC}">${p.cat}</div>
+      <div class="pc-pairs">
+        <span>${p.p1}</span>
+        <span class="pc-arrow" style="color:${valColor}">${arrow}</span>
+        <span>${p.p2}</span>
+      </div>
+      <div class="pc-corr" style="color:${valColor}">${p.v>0?'+':''}${p.v.toFixed(2)}</div>
+      <div class="pc-bar-wrap">
+        <div class="pc-bar-fill" style="width:${barW}%;background:${barColor}"></div>
+      </div>
+      <div class="pc-desc"><b>Mengapa?</b> ${p.why}</div>
+      <div style="margin-top:10px;padding:10px 14px;background:var(--sky);border-radius:9px;font-size:.78rem;color:var(--b2);border-left:2px solid var(--b1)">
+        💡 <b>Tip:</b> ${p.tip}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════
+// RISK ON / OFF
+// ══════════════════════════
+const RISK = {
+  on: {
+    pos: [
+      {pair:'AUD/USD', dir:'↑ NAIK', reason:'Commodity currency menguat saat optimisme ekonomi'},
+      {pair:'NZD/USD', dir:'↑ NAIK', reason:'Korelasi +0.92 dengan AUD, ikut menguat'},
+      {pair:'AUD/JPY', dir:'↑ NAIK', reason:'Double effect: AUD naik + JPY melemah'},
+      {pair:'EUR/JPY', dir:'↑ NAIK', reason:'Safe haven JPY ditinggalkan, EUR menguat relatif'},
+      {pair:'GBP/JPY', dir:'↑ NAIK', reason:'Sama seperti EUR/JPY, proxy risk appetite'},
+      {pair:'WTI/USD', dir:'↑ NAIK', reason:'Permintaan energi meningkat saat ekspansi ekonomi'},
+    ],
+    neg: [
+      {pair:'USD/JPY', dir:'↑ NAIK', reason:'JPY melemah saat investor tinggalkan safe haven'},
+      {pair:'USD/CHF', dir:'↑ NAIK', reason:'CHF melemah, investor keluar dari safe haven Eropa'},
+      {pair:'XAU/USD', dir:'↓ TURUN', reason:'Emas berkompetisi dengan aset berisiko tinggi'},
+      {pair:'EUR/USD', dir:'↑ NAIK', reason:'Risk-on mendukung mata uang ekonomi besar'},
+    ]
+  },
+  off: {
+    pos: [
+      {pair:'XAU/USD', dir:'↑ NAIK', reason:'Safe haven utama, lonjakan terbesar saat krisis'},
+      {pair:'XAG/USD', dir:'↑ NAIK', reason:'Precious metal, ikut naik bersama emas'},
+      {pair:'USD/JPY', dir:'↓ TURUN', reason:'JPY menguat drastis, investor repatriasi ke Jepang'},
+      {pair:'USD/CHF', dir:'↓ TURUN', reason:'CHF safe haven Eropa, menguat saat panik'},
+    ],
+    neg: [
+      {pair:'AUD/USD', dir:'↓ TURUN', reason:'Commodity currency melemah, risk appetite turun'},
+      {pair:'NZD/USD', dir:'↓ TURUN', reason:'Ikut AUD, keduanya commodity currencies'},
+      {pair:'AUD/JPY', dir:'↓ TURUN', reason:'Double loss: AUD turun + JPY menguat'},
+      {pair:'EUR/JPY', dir:'↓ TURUN', reason:'Safe haven flow ke JPY mendominasi'},
+      {pair:'GBP/JPY', dir:'↓ TURUN', reason:'Pair paling volatile saat risk-off'},
+      {pair:'WTI/USD', dir:'↓ TURUN', reason:'Demand turun saat ekspektasi resesi meningkat'},
+    ]
+  }
+};
+
+let currentRisk = 'on';
+function setRisk(mode) {
+  currentRisk = mode;
+  document.getElementById('riskOnBtn').classList.toggle('active', mode==='on');
+  document.getElementById('riskOffBtn').classList.toggle('active', mode==='off');
+  renderRisk();
+}
+
+function renderRisk() {
+  const d = RISK[currentRisk];
+  const colP = currentRisk==='on' ?
+    {bg:'linear-gradient(160deg,#F0FDF4,#DCFCE7)',border:'rgba(5,150,105,.2)',t:'#047857',icon:'🚀'} :
+    {bg:'linear-gradient(160deg,#F0FDF4,#DCFCE7)',border:'rgba(5,150,105,.2)',t:'#047857',icon:'🛡️'};
+  const colN = currentRisk==='on' ?
+    {bg:'linear-gradient(160deg,#FFF7ED,#FFEDD5)',border:'rgba(249,115,22,.2)',t:'#C2410C',icon:'⚠️'} :
+    {bg:'linear-gradient(160deg,#FFF1F2,#FEE2E2)',border:'rgba(239,68,68,.2)',t:'#991B1B',icon:'📉'};
+
+  const posTitle = currentRisk==='on' ? '🚀 Pair yang MENGUAT' : '🛡️ Safe Haven MENGUAT';
+  const negTitle = currentRisk==='on' ? '⚠️ Safe Haven MELEMAH' : '📉 Pair yang MELEMAH';
+
+  const pCol = `<div class="risk-col positive">
+    <div class="risk-col-title" style="color:${colP.t}">${posTitle}</div>
+    ${d.pos.map(i=>`<div class="risk-pair-item">
+      <div>
+        <div class="rpi-pair">${i.pair}</div>
+        <div class="rpi-reason">${i.reason}</div>
+      </div>
+      <span class="rpi-dir ${i.dir.includes('NAIK')?'up':'dn'}">${i.dir}</span>
+    </div>`).join('')}
+  </div>`;
+
+  const nCol = `<div class="risk-col negative">
+    <div class="risk-col-title" style="color:${colN.t}">${negTitle}</div>
+    ${d.neg.map(i=>`<div class="risk-pair-item">
+      <div>
+        <div class="rpi-pair">${i.pair}</div>
+        <div class="rpi-reason">${i.reason}</div>
+      </div>
+      <span class="rpi-dir ${i.dir.includes('NAIK')?'up':'dn'}">${i.dir}</span>
+    </div>`).join('')}
+  </div>`;
+
+  document.getElementById('riskContent').innerHTML = pCol + nCol;
+}
+
+// ══════════════════════════
+// COMMODITY TABS
+// ══════════════════════════
+const COMM_DATA = [
+  {
+    id:'gold', label:'🥇 EMAS (XAU/USD)',
+    color:'#D97706', grad:'linear-gradient(135deg,#D97706,#F59E0B)',
+    title:'EMAS — XAU/USD',
+    sub:'Emas adalah aset safe haven universal dan hedge terhadap inflasi dan depresiasi USD. Australia (produsen ke-2 dunia) membuat AUD sangat terkorelasi.',
+    stats:[{v:'+0.92',l:'vs XAG/USD'},{v:'+0.82',l:'vs AUD/USD'},{v:'-0.91',l:'vs USD/CHF'}],
+    bars:[
+      {pair:'XAG/USD',v:0.92,pos:true},{pair:'AUD/USD',v:0.82,pos:true},
+      {pair:'NZD/USD',v:0.75,pos:true},{pair:'EUR/USD',v:0.72,pos:true},
+      {pair:'GBP/USD',v:0.66,pos:true},{pair:'USD/CHF',v:-0.70,pos:false},
+      {pair:'USD/JPY',v:-0.65,pos:false},{pair:'USD/CAD',v:-0.62,pos:false},
+    ]
+  },
+  {
+    id:'silver', label:'🥈 PERAK (XAG/USD)',
+    color:'#64748B', grad:'linear-gradient(135deg,#64748B,#94A3B8)',
+    title:'PERAK — XAG/USD',
+    sub:'Perak memiliki peran ganda: precious metal (safe haven) dan industrial metal (elektronik, panel surya). Dua kali lebih volatile dari emas.',
+    stats:[{v:'+0.92',l:'vs XAU/USD'},{v:'+0.78',l:'vs AUD/USD'},{v:'-0.62',l:'vs USD/CHF'}],
+    bars:[
+      {pair:'XAU/USD',v:0.92,pos:true},{pair:'AUD/USD',v:0.78,pos:true},
+      {pair:'NZD/USD',v:0.72,pos:true},{pair:'EUR/USD',v:0.65,pos:true},
+      {pair:'GBP/USD',v:0.60,pos:true},{pair:'USD/CHF',v:-0.62,pos:false},
+      {pair:'USD/JPY',v:-0.58,pos:false},{pair:'USD/CAD',v:-0.58,pos:false},
+    ]
+  },
+  {
+    id:'oil', label:'🛢️ MINYAK (WTI/USD)',
+    color:'#6366F1', grad:'linear-gradient(135deg,#6366F1,#1A56E8)',
+    title:'MINYAK WTI — WTI/USD',
+    sub:'Minyak adalah barometer pertumbuhan ekonomi global. Kanada (eksportir ke AS terbesar) memiliki korelasi teruat -0.82. Sering menjadi leading indicator.',
+    stats:[{v:'-0.82',l:'vs USD/CAD'},{v:'+0.58',l:'vs XAU/USD'},{v:'+0.55',l:'vs AUD/USD'}],
+    bars:[
+      {pair:'USD/CAD',v:-0.82,pos:false},{pair:'XAU/USD',v:0.58,pos:true},
+      {pair:'AUD/USD',v:0.55,pos:true},{pair:'XAG/USD',v:0.55,pos:true},
+      {pair:'NZD/USD',v:0.48,pos:true},{pair:'EUR/USD',v:0.30,pos:true},
+      {pair:'USD/CHF',v:-0.28,pos:false},{pair:'USD/JPY',v:-0.20,pos:false},
+    ]
+  }
+];
+
+let currComm = 'gold';
+function setComm(id) {
+  currComm = id;
+  document.querySelectorAll('.comm-tab').forEach(b=>b.classList.remove('active'));
+  document.querySelector(`.comm-tab[data-id="${id}"]`).classList.add('active');
+  document.querySelectorAll('.comm-content').forEach(c=>c.classList.remove('show'));
+  document.getElementById('comm-'+id).classList.add('show');
+}
+
+function buildComm() {
+  const tabs = document.getElementById('commTabs');
+  const content = document.getElementById('commContent');
+  tabs.innerHTML = COMM_DATA.map(d=>`
+    <button class="comm-tab ${d.id===currComm?'active':''}" data-id="${d.id}"
+      style="${d.id===currComm?`background:${d.grad}`:''}${d.id===currComm?';color:#fff':''}"
+      onclick="setComm('${d.id}')">${d.label}</button>
+  `).join('');
+
+  content.innerHTML = COMM_DATA.map(d=>`
+    <div class="comm-content ${d.id===currComm?'show':''}" id="comm-${d.id}">
+      <div class="comm-left">
+        <div class="comm-title" style="color:${d.color}">${d.title}</div>
+        <div class="comm-sub">${d.sub}</div>
+        <div class="comm-stat-row">
+          ${d.stats.map(s=>`<div class="comm-stat">
+            <div class="comm-stat-val" style="color:${parseFloat(s.v)>0?'#047857':'#991B1B'}">${s.v}</div>
+            <div class="comm-stat-lbl">${s.l}</div>
+          </div>`).join('')}
+        </div>
+      </div>
+      <div class="comm-bars">
+        <div style="font-size:.78rem;font-weight:700;color:var(--mute);letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px">Korelasi dengan Pair Forex</div>
+        ${d.bars.map(b=>{
+          const w = Math.round(Math.abs(b.v)*100);
+          const grad = b.pos ? `linear-gradient(90deg,#10B981,#059669)` : `linear-gradient(90deg,#F97316,#EF4444)`;
+          const sign = b.v>0?'+':'';
+          return `<div class="comm-bar-row">
+            <div class="cbr-pair">${b.pair}</div>
+            <div class="cbr-bar-wrap">
+              <div class="cbr-bar" style="width:${w}%;background:${grad}">
+                <span class="cbr-val">${sign}${b.v.toFixed(2)}</span>
+              </div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+// ══════════════════════════
+// SCENARIOS
+// ══════════════════════════
+const SCENARIOS = [
+  {
+    num:'A', title:'Data Inflasi AS Tinggi (CPI Beat)',
+    color:'#1A56E8', hbg:'linear-gradient(135deg,#EFF6FF,#DBEAFE)',
+    situation:'BLS rilis CPI AS lebih tinggi dari ekspektasi. USD menguat di semua pair.',
+    preds:[
+      {pair:'EUR/USD',dir:'dn',txt:'↓ TURUN'},
+      {pair:'GBP/USD',dir:'dn',txt:'↓ TURUN'},
+      {pair:'USD/CHF',dir:'up',txt:'↑ NAIK'},
+      {pair:'USD/JPY',dir:'up',txt:'↑ NAIK'},
+      {pair:'XAU/USD',dir:'dn',txt:'↓ TURUN'},
+    ],
+    action:'<strong>Trade Utama:</strong> SHORT EUR/USD. Konfirmasi: GBP/USD juga breakdown (+0.89). Jangan shorting EUR/USD + USD/JPY bersamaan — itu kontradiksi.'
+  },
+  {
+    num:'B', title:'China Umumkan Stimulus $500 Miliar',
+    color:'#059669', hbg:'linear-gradient(135deg,#F0FDF4,#DCFCE7)',
+    situation:'Beijing umumkan paket stimulus besar. Sentimen risk-on global menyebar.',
+    preds:[
+      {pair:'AUD/USD',dir:'up',txt:'↑ NAIK'},
+      {pair:'NZD/USD',dir:'up',txt:'↑ NAIK'},
+      {pair:'AUD/JPY',dir:'up',txt:'↑ KUAT'},
+      {pair:'USD/JPY',dir:'up',txt:'↑ NAIK'},
+      {pair:'XAU/USD',dir:'dn',txt:'↓ TURUN'},
+    ],
+    action:'<strong>Trade Utama:</strong> LONG AUD/USD atau AUD/JPY. Konfirmasi: NZD/USD juga bullish. AUD/JPY memberikan return terbaik (double effect).'
+  },
+  {
+    num:'C', title:'OPEC Pangkas Produksi Minyak 15%',
+    color:'#7C3AED', hbg:'linear-gradient(135deg,#F5F3FF,#EDE9FE)',
+    situation:'OPEC+ umumkan pemangkasan produksi besar. WTI naik 6% dalam sehari.',
+    preds:[
+      {pair:'USD/CAD',dir:'dn',txt:'↓ TURUN'},
+      {pair:'AUD/USD',dir:'up',txt:'↑ NAIK'},
+      {pair:'XAU/USD',dir:'up',txt:'↑ NAIK'},
+      {pair:'WTI',dir:'up',txt:'↑ NAIK'},
+      {pair:'USD/JPY',dir:'up',txt:'↑ MILD'},
+    ],
+    action:'<strong>Trade Utama:</strong> SHORT USD/CAD setelah konfirmasi WTI +3%. Korelasi -0.82 adalah yang paling dapat diandalkan di seluruh pasar forex.'
+  },
+  {
+    num:'D', title:'Krisis Geopolitik — Konflik Militer',
+    color:'#DC2626', hbg:'linear-gradient(135deg,#FFF1F2,#FEE2E2)',
+    situation:'Konflik militer besar pecah di kawasan strategis. Pasar global panic selling.',
+    preds:[
+      {pair:'XAU/USD',dir:'up',txt:'↑↑ MELESAT'},
+      {pair:'USD/JPY',dir:'dn',txt:'↓ TURUN'},
+      {pair:'USD/CHF',dir:'dn',txt:'↓ TURUN'},
+      {pair:'AUD/USD',dir:'dn',txt:'↓ TURUN'},
+      {pair:'GBP/JPY',dir:'dn',txt:'↓↓ CRASH'},
+    ],
+    action:'<strong>Trade Utama:</strong> LONG XAU/USD atau SHORT USD/JPY. Hindari AUD, NZD. Perhatikan spread yang melebar 2-3x saat market panik.'
+  }
+];
+
+function buildScenarios() {
+  document.getElementById('scenarioGrid').innerHTML = SCENARIOS.map(s=>`
+    <div class="scenario-card">
+      <div class="sc-header" style="background:${s.hbg}">
+        <div class="sc-num" style="background:${s.color}">${s.num}</div>
+        <div class="sc-title">${s.title}</div>
+      </div>
+      <div class="sc-body">
+        <div class="sc-situation">📌 ${s.situation}</div>
+        <div class="sc-predictions">
+          <div style="font-size:.72rem;font-weight:700;color:var(--mute);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px">Prediksi Berdasarkan Korelasi:</div>
+          ${s.preds.map(p=>`<div class="sc-pred">
+            <span class="sc-pred-pair">${p.pair}</span>
+            <span class="sc-pred-dir ${p.dir}">${p.txt}</span>
+          </div>`).join('')}
+        </div>
+        <div class="sc-action">📊 ${s.action}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ══════════════════════════
+// RULES
+// ══════════════════════════
+const RULES = [
+  {
+    num:'RULE 01', title:'Ketika USD Melemah',
+    trigger:'<strong>EUR/USD naik</strong> atau <strong>DXY Index turun</strong>',
+    effects:[
+      {txt:'EUR/USD ↑', pos:true},{txt:'GBP/USD ↑', pos:true},
+      {txt:'AUD/USD ↑', pos:true},{txt:'USD/CHF ↓', pos:false},
+      {txt:'USD/JPY ↓', pos:false},{txt:'XAU/USD ↑', pos:true},
+    ],
+    note:'USD adalah base di USD/CHF dan USD/JPY, sehingga saat USD melemah, keduanya otomatis turun. Ini adalah hukum mekanis yang berlaku hampir 100% waktu.'
+  },
+  {
+    num:'RULE 02', title:'Ketika Risk-On (Optimisme)',
+    trigger:'<strong>Saham global naik</strong>, <strong>VIX turun</strong>, atau data ekonomi positif',
+    effects:[
+      {txt:'AUD/USD ↑', pos:true},{txt:'NZD/USD ↑', pos:true},
+      {txt:'AUD/JPY ↑', pos:true},{txt:'USD/JPY ↑', pos:true},
+      {txt:'USD/CHF ↑', pos:true},{txt:'XAU/USD ↓', pos:false},
+    ],
+    note:'JPY dan CHF melemah karena investor meninggalkan safe haven. AUD dan NZD menguat karena selera risiko global meningkat dan demand komoditas naik.'
+  },
+  {
+    num:'RULE 03', title:'Ketika Minyak WTI Naik',
+    trigger:'<strong>Harga WTI naik >2%</strong> dalam satu sesi atau supply shock terjadi',
+    effects:[
+      {txt:'USD/CAD ↓', pos:false},{txt:'AUD/USD ↑', pos:true},
+      {txt:'NZD/USD ↑', pos:true},{txt:'XAU/USD ↑', pos:true},
+      {txt:'USD/JPY ↑', pos:true},{txt:'WTI ↑', pos:true},
+    ],
+    note:'USD/CAD adalah trade utama (korelasi -0.82). Kanada = eksportir minyak terbesar ke AS. Minyak naik → CAD menguat → USD/CAD turun. Hampir setiap kali!'
+  },
+  {
+    num:'RULE 04', title:'Jangan Double Exposure',
+    trigger:'Sebelum membuka posisi kedua, cek korelasi dengan posisi yang sudah ada',
+    effects:[
+      {txt:'EUR/USD + GBP/USD', pos:false},{txt:'AUD/USD + NZD/USD', pos:false},
+      {txt:'EUR/USD + XAU/USD', pos:false},{txt:'USD/CHF + USD/JPY', pos:false},
+      {txt:'EUR/USD + AUD/USD', pos:false},{txt:'Short USD/JPY + Short USD/CHF', pos:false},
+    ],
+    note:'Membuka dua pair dengan korelasi +0.8 berarti risiko dobel dengan profit yang tidak dobel. Manajemen risiko yang baik mensyaratkan diversifikasi yang sesungguhnya.'
+  },
+];
+
+function buildRules() {
+  document.getElementById('rulesGrid').innerHTML = RULES.map(r=>`
+    <div class="rule-card">
+      <div class="rule-num">${r.num}</div>
+      <div class="rule-title">${r.title}</div>
+      <div class="rule-trigger">Trigger: ${r.trigger}</div>
+      <div class="rule-effects">
+        ${r.effects.map(e=>`<span class="rule-effect ${e.pos?'up':'dn'}">${e.txt}</span>`).join('')}
+      </div>
+      <div class="rule-note">${r.note}</div>
+    </div>
+  `).join('');
+}
+
+// ══════════════════════════
+// QUICK REFERENCE TABLE
+// ══════════════════════════
+const QR_DATA = [
+  {from:'AUD/USD ↑',to:'NZD/USD ↑',v:'+0.92',stars:'★★★★★',why:'Commodity twins Pasifik'},
+  {from:'XAU/USD ↑',to:'XAG/USD ↑',v:'+0.92',stars:'★★★★★',why:'Precious metals sesama'},
+  {from:'EUR/USD ↑',to:'USD/CHF ↓',v:'-0.91',stars:'★★★★★',why:'Mirror image mekanis'},
+  {from:'EUR/USD ↑',to:'GBP/USD ↑',v:'+0.89',stars:'★★★★★',why:'Kedua mata uang Eropa vs USD'},
+  {from:'EUR/JPY ↑',to:'GBP/JPY ↑',v:'+0.88',stars:'★★★★★',why:'Sesama JPY cross risk'},
+  {from:'AUD/USD ↑',to:'XAU/USD ↑',v:'+0.82',stars:'★★★★★',why:'Australia = penghasil emas'},
+  {from:'WTI ↑',to:'USD/CAD ↓',v:'-0.82',stars:'★★★★★',why:'Kanada = eksportir minyak ke AS'},
+  {from:'EUR/USD ↑',to:'USD/JPY ↓',v:'-0.82',stars:'★★★★★',why:'JPY safe haven vs USD'},
+  {from:'AUD/USD ↑',to:'USD/CAD ↓',v:'-0.78',stars:'★★★★☆',why:'Keduanya commodity currency'},
+  {from:'USD/JPY ↑',to:'AUD/JPY ↑',v:'+0.68',stars:'★★★★☆',why:'Keduanya pair vs JPY'},
+  {from:'EUR/USD ↑',to:'AUD/USD ↑',v:'+0.68',stars:'★★★★☆',why:'Risk-on mendorong keduanya'},
+  {from:'XAU/USD ↑',to:'USD/CHF ↓',v:'-0.70',stars:'★★★★☆',why:'Emas & CHF berkompetisi'},
+];
+
+function buildQR() {
+  const t = document.getElementById('qrTable');
+  t.innerHTML = `<thead><tr>
+    <th class="qr-th">JIKA INI TERJADI...</th>
+    <th class="qr-th">EKSPEKTASIKAN INI</th>
+    <th class="qr-th">KORELASI</th>
+    <th class="qr-th">KEKUATAN</th>
+    <th class="qr-th">ALASAN</th>
+  </tr></thead><tbody>
+  ${QR_DATA.map((r,i)=>`<tr style="${i%2===0?'':'background:rgba(255,255,255,.02)'}">
+    <td class="qr-td">${r.from}</td>
+    <td class="qr-td" style="color:rgba(255,255,255,.7)">${r.to}</td>
+    <td class="qr-td ${r.v.startsWith('+')?'qr-corr-pos':'qr-corr-neg'}">${r.v}</td>
+    <td class="qr-td qr-stars">${r.stars}</td>
+    <td class="qr-td" style="color:rgba(255,255,255,.45);font-size:.8rem">${r.why}</td>
+  </tr>`).join('')}
+  </tbody>`;
+}
+
+// ══════════════════════════
+// NAVBAR SCROLL
+// ══════════════════════════
+window.addEventListener('scroll', ()=>{
+  document.getElementById('navbar').classList.toggle('scrolled', window.scrollY>50);
+});
+
+// ══════════════════════════
+// COUNTER ANIMATION
+// ══════════════════════════
+function animateCounters() {
+  document.querySelectorAll('[data-count]').forEach(el=>{
+    const target = parseInt(el.dataset.count);
+    const suffix = el.dataset.suffix || '';
+    let current = 0;
+    const inc = target/40;
+    const t = setInterval(()=>{
+      current = Math.min(current+inc, target);
+      el.textContent = Math.floor(current) + suffix;
+      if(current>=target) clearInterval(t);
+    }, 30);
+  });
+}
+
+// ══════════════════════════
+// INTERSECTION OBSERVER
+// ══════════════════════════
+const obs = new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      e.target.classList.add('visible');
+      if(e.target.closest('#home')) animateCounters();
+    }
+  });
+},{threshold:0.1});
+
+document.querySelectorAll('.fade-up,.fade-in,.stagger').forEach(el=>obs.observe(el));
+
+// ══════════════════════════
+// INIT
+// ══════════════════════════
+buildTicker();
+buildMiniMatrix();
+buildMatrix();
+buildPairs();
+renderRisk();
+buildComm();
+buildScenarios();
+buildRules();
+buildQR();
+
+// Trigger counter on hero load
+setTimeout(animateCounters, 500);
+</script>
+</body>
+</html>
